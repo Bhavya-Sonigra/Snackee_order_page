@@ -4,8 +4,5 @@
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "build",
-  "framework": "create-react-app",
-  "environment": {
-    "REACT_APP_API_URL": "https://snackee-backend-production.up.railway.app"
-  }
+  "framework": "create-react-app"
 } 
