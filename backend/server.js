@@ -7,8 +7,17 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS configuration to allow requests from Vercel & other environments
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://snackee-order-page.vercel.app',
+    'https://snackee-frontend.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Test database connection endpoint
