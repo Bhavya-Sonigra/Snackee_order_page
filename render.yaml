@@ -14,12 +14,14 @@ services:
 
   - type: web
     name: snackee-frontend
-    env: static
+    env: node
     buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/dist
+    startCommand: cd frontend && npm start
     envVars:
-      - key: VITE_API_URL
+      - key: REACT_APP_API_URL
         value: https://snackee-backend.onrender.com
+      - key: NODE_ENV
+        value: production
 
 databases:
   - name: snackee-db
