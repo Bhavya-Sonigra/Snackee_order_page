@@ -1,29 +1,44 @@
 const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 async function setupDatabase() {
   const pool = new Pool({
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    database: 'postgres', // Connect to default postgres database first
-    password: process.env.DB_PASSWORD || 'postgres',
-    port: process.env.DB_PORT || 5432,
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
   });
 
   try {
-    // Check if database exists
-    const result = await pool.query(
-      "SELECT 1 FROM pg_database WHERE datname = $1",
-      [process.env.DB_NAME || 'food_ordering']
-    );
+    console.log('Connected to database, executing SQL scripts...');
 
-    if (result.rows.length === 0) {
-      // Database doesn't exist, create it
-      await pool.query(`CREATE DATABASE ${process.env.DB_NAME || 'food_ordering'}`);
-      console.log(`Database ${process.env.DB_NAME || 'food_ordering'} created successfully`);
-    } else {
-      console.log(`Database ${process.env.DB_NAME || 'food_ordering'} already exists`);
+    // Read SQL file content
+    const sqlFilePath = path.join(__dirname, '..', 'database.sql');
+    const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
+
+
+    const statements = sqlContent
+      .replace(/--.*\n/g, '') // Remove comments
+      .replace(/\\c order_page_db;/g, '') // Remove database switching commands
+      .replace(/CREATE DATABASE order_page_db;/g, '') // Remove database creation command
+      .split(';')
+      .filter(statement => statement.trim().length > 0);
+
+    // Execute each SQL statement
+    for (const statement of statements) {
+      try {
+        await pool.query(statement);
+        console.log(`Executed: ${statement.substring(0, 50)}...`);
+      } catch (err) {
+        console.error(`Error executing statement: ${statement.substring(0, 100)}...`);
+        console.error(err.message);
+        // Continue with next statement
+      }
     }
+
+    console.log('Database setup completed successfully');
   } catch (error) {
     console.error('Error setting up database:', error);
   } finally {
